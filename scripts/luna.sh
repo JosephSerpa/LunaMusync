@@ -11,7 +11,7 @@ COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$LIBRARIES
 wait_luna() {
   local port
   port="$(sed -n 's/^LUNA_PORT=//p' "$ENV_FILE" | head -n 1)"
-  port="${port:-3001}"
+  port="${port:-1832}"
   for _ in $(seq 1 40); do
     if curl -fsS --max-time 3 "http://localhost:$port/api/health" >/dev/null 2>&1; then return; fi
     sleep 3

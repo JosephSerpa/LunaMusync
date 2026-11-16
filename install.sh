@@ -60,7 +60,7 @@ if [[ ! -f "$INSTALL_DIR/.env" ]]; then
     echo "No hay puertos libres." >&2
     return 1
   }
-  LUNA_PORT="$(find_free_port 3001)"
+  LUNA_PORT="$(find_free_port 1832)"
   cat > "$INSTALL_DIR/.env" <<EOF
 LUNA_IMAGE=$IMAGE
 LUNA_REPOSITORY=$REPOSITORY
@@ -69,7 +69,7 @@ COOKIE_SECURE=false
 EOF
 fi
 LUNA_PORT="$(sed -n 's/^LUNA_PORT=//p' "$INSTALL_DIR/.env" | head -n 1)"
-LUNA_PORT="${LUNA_PORT:-3001}"
+LUNA_PORT="${LUNA_PORT:-1832}"
 
 if [[ $NO_START -eq 0 ]]; then
   cd "$INSTALL_DIR"

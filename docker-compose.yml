@@ -27,7 +27,7 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       WEB_DIST: /app/web
     ports:
-      - "${LUNA_BIND:-127.0.0.1}:${LUNA_PORT:-3001}:3001"
+      - "${LUNA_BIND:-127.0.0.1}:${LUNA_PORT:-1832}:3001"
     volumes:
       - luna-data:/data
     depends_on:

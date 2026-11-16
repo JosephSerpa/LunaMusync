@@ -8,7 +8,7 @@
 4. Selecciona cada carpeta de música. El asistente preguntará si quieres añadir otra.
 5. Espera a que se abra Luna y crea tu usuario administrador en la pantalla de bienvenida.
 
-Luna usa `http://localhost:3001` por defecto. Si el puerto está ocupado, el asistente elegirá el siguiente puerto libre y abrirá la dirección correcta. No detendrá otros servicios.
+Luna usa `http://localhost:1832` por defecto. Si el puerto está ocupado, el asistente elegirá el siguiente puerto libre y abrirá la dirección correcta. No detendrá otros servicios.
 
 Solo verás la interfaz de Luna. El motor interno indexará automáticamente las bibliotecas seleccionadas y tu música aparecerá progresivamente; una colección grande puede tardar. No hay que crear otro usuario ni abrir un segundo servicio.
 

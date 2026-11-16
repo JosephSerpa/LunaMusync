@@ -19,7 +19,7 @@ function Invoke-Compose([string[]]$Arguments) {
 
 function Wait-Luna {
   $port = (Get-Content $EnvFile | Where-Object { $_ -match "^LUNA_PORT=" } | Select-Object -First 1) -replace "^LUNA_PORT=", ""
-  if (-not $port) { $port = "3001" }
+  if (-not $port) { $port = "1832" }
   for ($attempt = 0; $attempt -lt 40; $attempt++) {
     try {
       $health = Invoke-RestMethod -Uri "http://localhost:$port/api/health" -TimeoutSec 3

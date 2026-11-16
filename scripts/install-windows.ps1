@@ -4,7 +4,7 @@ param(
   [string[]]$LibraryPaths = @(),
   [string]$LunaImage = "ghcr.io/josephserpa/luna-musync:latest",
   [string]$Repository = "JosephSerpa/LunaMusync",
-  [string]$LunaPort = "3001",
+  [string]$LunaPort = "1832",
   [switch]$NoStart,
   [switch]$NoBrowser,
   [switch]$NoGui

@@ -15,7 +15,7 @@ Puedes conectar Luna Web a un servidor Navidrome, Subsonic, Airsonic o Gonic exi
 
 Consulta [INSTALACION.md](INSTALACION.md). En Windows, instala Docker Desktop, descomprime la release y abre `Instalar Luna.cmd`. El asistente permite seleccionar varias carpetas de música. En Linux o macOS, ejecuta `./install.sh`.
 
-Al abrir Luna por primera vez, crea tu propio usuario administrador directamente en su pantalla de bienvenida. Luna inicia la sesión automáticamente e indexa las bibliotecas elegidas durante la instalación. Los archivos musicales no se modifican.
+Al abrir Luna por primera vez, crea tu propio usuario administrador directamente en su pantalla de bienvenida. Luna inicia la sesión automáticamente e indexa las bibliotecas elegidas durante la instalación. La dirección predeterminada es `http://localhost:1832`. Los archivos musicales no se modifican.
 
 ## Desarrollo
 
