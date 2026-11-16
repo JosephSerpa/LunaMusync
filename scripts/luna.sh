@@ -61,7 +61,7 @@ update_luna() {
 
 [[ -f "$ENV_FILE" ]] || { echo "No se encontró la instalación de Luna." >&2; exit 1; }
 case "$COMMAND" in
-  start) "${COMPOSE[@]}" up -d; wait_luna; echo "Luna está disponible en http://localhost:3001" ;;
+  start) "${COMPOSE[@]}" up -d; wait_luna; echo "Luna está disponible." ;;
   stop) "${COMPOSE[@]}" stop; echo "Luna se detuvo sin borrar datos." ;;
   restart) "${COMPOSE[@]}" restart; wait_luna ;;
   status) "${COMPOSE[@]}" ps ;;

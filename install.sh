@@ -50,14 +50,27 @@ chmod +x "$INSTALL_DIR/luna.sh"
     index=$((index + 1))
   done
 } > "$INSTALL_DIR/docker-compose.libraries.yml"
-cat > "$INSTALL_DIR/.env" <<EOF
+if [[ ! -f "$INSTALL_DIR/.env" ]]; then
+  find_free_port() {
+    local port="$1"
+    while ((port <= 65535)); do
+      if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then printf '%s' "$port"; return; fi
+      ((port++))
+    done
+    echo "No hay puertos libres." >&2
+    return 1
+  }
+  LUNA_PORT="$(find_free_port 3001)"
+  NAVIDROME_PORT="$(find_free_port 4533)"
+  cat > "$INSTALL_DIR/.env" <<EOF
 LUNA_IMAGE=$IMAGE
 LUNA_REPOSITORY=$REPOSITORY
-LUNA_PORT=3001
-NAVIDROME_PORT=4533
-NAVIDROME_PUBLIC_URL=http://localhost:4533
+LUNA_PORT=$LUNA_PORT
+NAVIDROME_PORT=$NAVIDROME_PORT
+NAVIDROME_PUBLIC_URL=http://localhost:$NAVIDROME_PORT
 COOKIE_SECURE=false
 EOF
+fi
 
 if [[ $NO_START -eq 0 ]]; then
   cd "$INSTALL_DIR"

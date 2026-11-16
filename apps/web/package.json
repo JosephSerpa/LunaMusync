@@ -1,6 +1,6 @@
 {
   "name": "@luna/web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
   "dependencies": {
     "@fontsource/outfit": "^5.2.8",
     "@fontsource/sora": "^5.2.8",
-    "@luna/design-tokens": "0.1.0",
+    "@luna/design-tokens": "0.1.1",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "luna-musync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Ecosistema web y de administración para LunaPlayer y servidores OpenSubsonic.",
   "workspaces": [

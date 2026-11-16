@@ -22,6 +22,15 @@ function Write-Utf8([string]$Path, [string[]]$Lines) {
   [System.IO.File]::WriteAllLines($Path, $Lines, (New-Object System.Text.UTF8Encoding($false)))
 }
 
+function Find-FreePort([int]$Preferred) {
+  if ($Preferred -lt 1 -or $Preferred -gt 65535) { throw "El puerto debe estar entre 1 y 65535." }
+  $listeners = [Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners().Port
+  for ($port = $Preferred; $port -le [Math]::Min($Preferred + 100, 65535); $port++) {
+    if ($listeners -notcontains $port) { return [string]$port }
+  }
+  throw "No se encontró un puerto libre a partir de $Preferred."
+}
+
 function Select-LibraryFolders {
   $paths = @()
   if (-not $NoGui) {
@@ -92,6 +101,13 @@ foreach ($path in $unique) {
 Write-Utf8 (Join-Path $InstallDir "docker-compose.libraries.yml") $volumeLines
 
 $envPath = Join-Path $InstallDir ".env"
+if (-not (Test-Path $envPath)) {
+  if (-not $PSBoundParameters.ContainsKey("LunaPort")) { $LunaPort = Find-FreePort ([int]$LunaPort) }
+  if (-not $PSBoundParameters.ContainsKey("NavidromePort")) { $NavidromePort = Find-FreePort ([int]$NavidromePort) }
+  if ($LunaPort -ne "3001" -or $NavidromePort -ne "4533") {
+    Write-Host "Puertos ocupados: Luna usará $LunaPort y Navidrome usará $NavidromePort." -ForegroundColor Yellow
+  }
+}
 $navidromePublicUrl = "http://localhost:$NavidromePort"
 $cookieSecure = "false"
 if (Test-Path $envPath) {

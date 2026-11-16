@@ -8,10 +8,12 @@
 4. Selecciona cada carpeta de música. El asistente preguntará si quieres añadir otra.
 5. Espera a que se abran las páginas de configuración.
 
+Los puertos predeterminados son `3001` para Luna y `4533` para Navidrome. Si alguno está ocupado, el asistente elegirá el siguiente puerto libre y abrirá las direcciones correctas. No detendrá otros servicios.
+
 En la primera instalación:
 
-1. En la página de Navidrome (`http://localhost:4533`), crea el usuario administrador. Es el único paso que Navidrome exige realizar desde su propia interfaz.
-2. Abre Luna (`http://localhost:3001`) e inicia sesión con ese usuario.
+1. En la página de Navidrome que abre el asistente (`http://localhost:4533` por defecto), crea el usuario administrador. Es el único paso que Navidrome exige realizar desde su propia interfaz.
+2. Abre Luna (`http://localhost:3001` por defecto) e inicia sesión con ese usuario.
 3. Navidrome indexará las bibliotecas seleccionadas. Una colección grande puede tardar.
 
 La instalación se guarda en `%USERPROFILE%\LunaMusync`. Allí encontrarás accesos para **abrir**, **detener**, **actualizar** o **cambiar las bibliotecas**. No necesitas volver a editar archivos de configuración.

@@ -54,7 +54,7 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
   const pathname = url.pathname;
 
   if (pathname === "/api/health" && method === "GET") {
-    sendJson(response, 200, { status: "ok", service: "luna-core", version: "0.1.0" });
+    sendJson(response, 200, { status: "ok", service: "luna-core", version: process.env.LUNA_VERSION || "dev" });
     return;
   }
 

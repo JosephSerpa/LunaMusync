@@ -85,7 +85,7 @@ if (-not (Test-Path $EnvFile)) { throw "No se encontró la instalación de Luna 
 Push-Location $Root
 try {
   switch ($Command) {
-    "start" { Invoke-Compose @("up", "-d"); Wait-Luna; Write-Host "Luna está disponible en http://localhost:3001" -ForegroundColor Green }
+    "start" { Invoke-Compose @("up", "-d"); Wait-Luna; Write-Host "Luna está disponible." -ForegroundColor Green }
     "stop" { Invoke-Compose @("stop"); Write-Host "Luna se detuvo. Tus bibliotecas y datos se conservan." }
     "restart" { Invoke-Compose @("restart"); Wait-Luna }
     "status" { Invoke-Compose @("ps") }
