@@ -21,7 +21,16 @@ export const api = {
     body: JSON.stringify({ serverUrl, username, password }),
   }),
   disconnect: () => request<{ authenticated: false }>("/api/session", { method: "DELETE" }),
-  albums: () => request<{ albums: Album[] }>("/api/library/albums?size=60"),
+  albums: async () => {
+    const albums: Album[] = [];
+    let offset = 0;
+    while (true) {
+      const result = await request<{ albums: Album[] }>(`/api/library/albums?size=100&offset=${offset}`);
+      albums.push(...result.albums);
+      if (result.albums.length < 100) return { albums };
+      offset += result.albums.length;
+    }
+  },
   album: (id: string) => request<{ album: Album }>(`/api/library/albums/${encodeURIComponent(id)}`),
   songs: async () => {
     const songs: Song[] = [];

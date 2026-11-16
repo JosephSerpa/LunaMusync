@@ -52,7 +52,7 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           node -e 'const fs = require("node:fs"); const crypto = require("node:crypto"); const image = `ghcr.io/${process.env.GITHUB_REPOSITORY_OWNER.toLowerCase()}/luna-musync@${process.env.DIGEST}`; const composeSha256 = crypto.createHash("sha256").update(fs.readFileSync("docker-compose.yml")).digest("hex"); fs.writeFileSync("luna-release.json", JSON.stringify({ version: process.env.VERSION, image, composeSha256 }, null, 2) + "\n");'
-          tar --exclude=.git --exclude=node_modules --exclude=dist --exclude=.env --exclude=.luna-test --exclude=backups -czf luna-musync-${{ github.ref_name }}.tar.gz .
+          tar --exclude=.git --exclude=node_modules --exclude=dist --exclude=*.tsbuildinfo --exclude=.env --exclude=.luna-test --exclude=backups -czf luna-musync-${{ github.ref_name }}.tar.gz .
       - name: Publicar release e instalador
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
