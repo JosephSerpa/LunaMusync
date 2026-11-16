@@ -5,7 +5,6 @@ param(
   [string]$LunaImage = "ghcr.io/josephserpa/luna-musync:latest",
   [string]$Repository = "JosephSerpa/LunaMusync",
   [string]$LunaPort = "3001",
-  [string]$NavidromePort = "4533",
   [switch]$NoStart,
   [switch]$NoBrowser,
   [switch]$NoGui
@@ -101,14 +100,9 @@ foreach ($path in $unique) {
 Write-Utf8 (Join-Path $InstallDir "docker-compose.libraries.yml") $volumeLines
 
 $envPath = Join-Path $InstallDir ".env"
-if (-not (Test-Path $envPath)) {
-  if (-not $PSBoundParameters.ContainsKey("LunaPort")) { $LunaPort = Find-FreePort ([int]$LunaPort) }
-  if (-not $PSBoundParameters.ContainsKey("NavidromePort")) { $NavidromePort = Find-FreePort ([int]$NavidromePort) }
-  if ($LunaPort -ne "3001" -or $NavidromePort -ne "4533") {
-    Write-Host "Puertos ocupados: Luna usará $LunaPort y Navidrome usará $NavidromePort." -ForegroundColor Yellow
-  }
+if (-not (Test-Path $envPath) -and -not $PSBoundParameters.ContainsKey("LunaPort")) {
+  $LunaPort = Find-FreePort ([int]$LunaPort)
 }
-$navidromePublicUrl = "http://localhost:$NavidromePort"
 $cookieSecure = "false"
 if (Test-Path $envPath) {
   $existingEnv = Get-Content $envPath
@@ -119,17 +113,12 @@ if (Test-Path $envPath) {
   if (-not $PSBoundParameters.ContainsKey("LunaImage") -and $settings.LUNA_IMAGE) { $LunaImage = $settings.LUNA_IMAGE }
   if (-not $PSBoundParameters.ContainsKey("Repository") -and $settings.LUNA_REPOSITORY) { $Repository = $settings.LUNA_REPOSITORY }
   if (-not $PSBoundParameters.ContainsKey("LunaPort") -and $settings.LUNA_PORT) { $LunaPort = $settings.LUNA_PORT }
-  if (-not $PSBoundParameters.ContainsKey("NavidromePort") -and $settings.NAVIDROME_PORT) { $NavidromePort = $settings.NAVIDROME_PORT }
-  if ($PSBoundParameters.ContainsKey("NavidromePort")) { $navidromePublicUrl = "http://localhost:$NavidromePort" }
-  if (-not $PSBoundParameters.ContainsKey("NavidromePort") -and $settings.NAVIDROME_PUBLIC_URL) { $navidromePublicUrl = $settings.NAVIDROME_PUBLIC_URL }
   if ($settings.COOKIE_SECURE) { $cookieSecure = $settings.COOKIE_SECURE }
 }
 $envLines = @(
   "LUNA_IMAGE=$LunaImage",
   "LUNA_REPOSITORY=$Repository",
   "LUNA_PORT=$LunaPort",
-  "NAVIDROME_PORT=$NavidromePort",
-  "NAVIDROME_PUBLIC_URL=$navidromePublicUrl",
   "COOKIE_SECURE=$cookieSecure"
 )
 Set-Content -Path $envPath -Value $envLines -Encoding ascii
@@ -161,11 +150,9 @@ if (-not $NoStart) {
   if (-not $healthy) { throw "Los contenedores se crearon, pero Luna no respondió. Revisa Docker Desktop y luna.ps1 logs." }
 
   Write-Host "`nLuna está funcionando." -ForegroundColor Green
-  Write-Host "1. Abre http://localhost:$NavidromePort y crea el administrador de Navidrome (solo la primera vez)."
-  Write-Host "2. Abre http://localhost:$LunaPort e inicia sesión con ese mismo usuario."
-  Write-Host "La primera indexación puede tardar; tu música aparecerá progresivamente."
+  Write-Host "Abre http://localhost:$LunaPort y crea tu usuario en la pantalla de bienvenida."
+  Write-Host "Tus bibliotecas se indexarán automáticamente; la primera vez puede tardar."
   if (-not $NoBrowser) {
-    Start-Process "http://localhost:$NavidromePort"
     Start-Process "http://localhost:$LunaPort"
   }
 } else {

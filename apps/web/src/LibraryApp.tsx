@@ -155,7 +155,7 @@ function LibraryContent({ session, onLogout }: { session: Session; onLogout: () 
         <header className="library-topbar">
           <div className="mobile-brand brand"><MoonIcon size={27} /><span>luna</span></div>
           <label className="search-box"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca canciones, álbumes o artistas" aria-label="Buscar en la biblioteca" />{searching ? <LoaderCircle className="spin" size={17} /> : query && <button onClick={() => setQuery("")} aria-label="Limpiar búsqueda"><X size={17} /></button>}</label>
-          <div className="topbar-user"><span className="status-dot" /><div><strong>{session.username}</strong><small>{session.demo ? "Modo demostración" : session.server.name}</small></div></div>
+          <div className="topbar-user"><span className="status-dot" /><div><strong>{session.username}</strong><small>{session.demo ? "Modo demostración" : session.managed ? "Luna Musync" : session.server.name}</small></div></div>
           <button className="icon-button mobile-logout" onClick={onLogout} aria-label="Cerrar sesión"><LogOut size={19} /></button>
         </header>
         <main className="library-content">

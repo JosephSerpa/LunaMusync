@@ -45,13 +45,14 @@ export interface Session {
   authenticated: boolean;
   username: string;
   serverUrl: string;
+  managed: boolean;
   server: ServerInfo;
   demo?: boolean;
 }
 
 export interface AppConfig {
   managed: boolean;
-  adminUrl: string | null;
+  setupRequired: boolean;
 }
 
 export type LibraryView = "home" | "albums" | "songs" | "playlists";

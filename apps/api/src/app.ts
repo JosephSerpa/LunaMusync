@@ -59,11 +59,36 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
   }
 
   if (pathname === "/api/config" && method === "GET") {
-    const managed = Boolean(process.env.NAVIDROME_URL);
+    const managedUrl = process.env.NAVIDROME_URL;
+    const managed = Boolean(managedUrl);
     sendJson(response, 200, {
       managed,
-      adminUrl: managed ? process.env.NAVIDROME_PUBLIC_URL || "http://localhost:4533" : null,
+      setupRequired: managed ? await isFirstTime(managedUrl!) : false,
     });
+    return;
+  }
+
+  if (pathname === "/api/setup" && method === "POST") {
+    const serverUrl = process.env.NAVIDROME_URL;
+    if (!serverUrl) throw new ApiError("Esta instancia no gestiona la configuración inicial.", 404);
+    const body = await readJson(request);
+    const username = requiredString(body.username, "El usuario es obligatorio.");
+    if (!/^[A-Za-z0-9]{1,64}$/.test(username)) throw new ApiError("El usuario debe tener entre 1 y 64 letras o números, sin espacios.", 400);
+    if (typeof body.password !== "string" || body.password.length < 8 || body.password.length > 256) {
+      throw new ApiError("La contraseña debe tener entre 8 y 256 caracteres.", 400);
+    }
+    if (!await isFirstTime(serverUrl)) throw new ApiError("Este espacio Luna ya está configurado. Inicia sesión.", 409);
+    const created = await fetch(`${serverUrl.replace(/\/$/, "")}/auth/createAdmin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password: body.password }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    await created.body?.cancel();
+    if (created.status === 403) throw new ApiError("Este espacio Luna ya está configurado. Inicia sesión.", 409);
+    if (!created.ok) throw new ApiError("No se pudo crear tu usuario. Inténtalo de nuevo.", 502);
+    const { client, info } = await SubsonicClient.connect(serverUrl, username, body.password);
+    createSession(response, client, username, serverUrl, info);
     return;
   }
 
@@ -71,18 +96,10 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
     const body = await readJson(request);
     const serverUrl = process.env.NAVIDROME_URL || requiredString(body.serverUrl, "La dirección del servidor es obligatoria.");
     const username = requiredString(body.username, "El usuario es obligatorio.");
-    const password = requiredString(body.password, "La contraseña es obligatoria.");
+    if (typeof body.password !== "string" || !body.password) throw new ApiError("La contraseña es obligatoria.", 400);
+    const password = body.password;
     const { client, info } = await SubsonicClient.connect(serverUrl, username, password);
-    const token = randomBytes(32).toString("base64url");
-    sessions.set(token, {
-      client,
-      username,
-      serverUrl,
-      info,
-      expiresAt: Date.now() + SESSION_DURATION,
-    });
-    response.setHeader("Set-Cookie", sessionCookie(token));
-    sendJson(response, 200, sessionPayload(sessions.get(token)!, true));
+    createSession(response, client, username, serverUrl, info);
     return;
   }
 
@@ -308,6 +325,46 @@ function getSession(request: IncomingMessage): Session | null {
   return session;
 }
 
+function createSession(response: ServerResponse, client: SubsonicClient, username: string, serverUrl: string, info: ServerInfo): void {
+  const token = randomBytes(32).toString("base64url");
+  const session: Session = {
+    client,
+    username,
+    serverUrl,
+    info,
+    expiresAt: Date.now() + SESSION_DURATION,
+  };
+  sessions.set(token, session);
+  response.setHeader("Set-Cookie", sessionCookie(token));
+  sendJson(response, 200, sessionPayload(session, true));
+}
+
+async function isFirstTime(serverUrl: string): Promise<boolean> {
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${serverUrl.replace(/\/$/, "")}/app/`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
+    });
+  } catch {
+    throw new ApiError("El motor musical todavía no está disponible. Espera unos segundos y vuelve a intentarlo.", 503);
+  }
+  if (!upstream.ok) {
+    await upstream.body?.cancel();
+    throw new ApiError("No se pudo comprobar el estado de la instalación.", 502);
+  }
+  const html = await upstream.text();
+  const match = html.match(/window\.__APP_CONFIG__\s*=\s*("(?:[^"\\]|\\.)*")/);
+  if (!match) throw new ApiError("El motor musical devolvió una configuración no válida.", 502);
+  try {
+    const config = JSON.parse(JSON.parse(match[1]!)) as { firstTime?: unknown };
+    if (typeof config.firstTime !== "boolean") throw new Error("missing firstTime");
+    return config.firstTime;
+  } catch {
+    throw new ApiError("El motor musical devolvió una configuración no válida.", 502);
+  }
+}
+
 function requireSession(request: IncomingMessage): Session {
   return getSession(request) ?? (() => { throw new ApiError("La sesión ha caducado. Vuelve a conectarte.", 401); })();
 }
@@ -317,6 +374,7 @@ function sessionPayload(session: Session, authenticated: boolean) {
     authenticated,
     username: session.username,
     serverUrl: session.serverUrl,
+    managed: Boolean(process.env.NAVIDROME_URL),
     server: session.info,
   };
 }

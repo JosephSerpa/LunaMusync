@@ -32,7 +32,7 @@ export function Sidebar({ view, onView, session, onLogout }: SidebarProps) {
         <div className="sidebar-bottom">
           <div className="server-card">
             <span className="server-card-icon"><Library size={19} /></span>
-            <div><strong>{session.server.name}</strong><span>{session.demo ? "Biblioteca de demostración" : session.username}</span></div>
+            <div><strong>{session.demo ? "Luna Demo" : session.managed ? "Luna Musync" : session.server.name}</strong><span>{session.demo ? "Biblioteca de demostración" : session.username}</span></div>
             <i title="Servidor conectado" />
           </div>
           <button className="logout-button" onClick={onLogout}><LogOut size={17} />Cerrar sesión</button>

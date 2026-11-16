@@ -25,18 +25,41 @@ const song = {
 };
 const album = { id: "album-1", name: "Nocturno", artist: "Luna Serena", coverArt: "cover-1", songCount: 1, duration: 180, year: 2026 };
 
-function fakeSubsonic(): Server {
-  return createServer((request, response) => {
+function fakeSubsonic(options: { firstTime?: boolean } = {}): Server {
+  let username = "listener";
+  let password = "secret";
+  let firstTime = options.firstTime ?? false;
+  return createServer(async (request, response) => {
     const url = new URL(request.url || "/", "http://localhost");
-    const method = url.pathname.split("/").pop();
-    const salt = url.searchParams.get("s") || "";
-    const expected = createHash("md5").update(`secret${salt}`).digest("hex");
-    const authenticated = url.searchParams.get("u") === "listener" && url.searchParams.get("t") === expected;
     const send = (payload: unknown, status = 200) => {
       const body = JSON.stringify(payload);
       response.writeHead(status, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) });
       response.end(body);
     };
+    if (url.pathname === "/app/") {
+      const config = JSON.stringify(JSON.stringify({ firstTime }));
+      response.writeHead(200, { "Content-Type": "text/html" });
+      response.end(`<html><script>window.__APP_CONFIG__ = ${config}</script></html>`);
+      return;
+    }
+    if (url.pathname === "/auth/createAdmin") {
+      if (!firstTime) {
+        send({ error: "Cannot create another first admin" }, 403);
+        return;
+      }
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      const credentials = JSON.parse(body);
+      username = credentials.username;
+      password = credentials.password;
+      firstTime = false;
+      send({ token: "native-jwt", username });
+      return;
+    }
+    const method = url.pathname.split("/").pop();
+    const salt = url.searchParams.get("s") || "";
+    const expected = createHash("md5").update(`${password}${salt}`).digest("hex");
+    const authenticated = url.searchParams.get("u") === username && url.searchParams.get("t") === expected;
     if (!authenticated) {
       send({ "subsonic-response": { status: "failed", error: { code: 40, message: "Wrong credentials" } } });
       return;
@@ -141,4 +164,55 @@ test("OpenSubsonic session protects catalog and proxies authenticated media", as
   await fetch(`${base}/api/session`, { method: "DELETE", headers });
   const loggedOut = await fetch(`${base}/api/session`, { headers }).then((response) => response.json());
   assert.equal(loggedOut.authenticated, false);
+});
+
+
+test("managed setup creates only the first administrator and opens a Luna session", async (context) => {
+  const upstream = fakeSubsonic({ firstTime: true });
+  const upstreamUrl = await listen(upstream);
+  const previousUrl = process.env.NAVIDROME_URL;
+  process.env.NAVIDROME_URL = upstreamUrl;
+  const app = createApp();
+  const base = await listen(app);
+  context.after(() => {
+    app.close();
+    upstream.close();
+    if (previousUrl === undefined) delete process.env.NAVIDROME_URL;
+    else process.env.NAVIDROME_URL = previousUrl;
+  });
+
+  const initial = await fetch(`${base}/api/config`).then((response) => response.json());
+  assert.deepEqual(initial, { managed: true, setupRequired: true });
+  const invalid = await fetch(`${base}/api/setup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "not valid", password: "Luna-Secret-123" }),
+  });
+  assert.equal(invalid.status, 400);
+
+  const setup = await fetch(`${base}/api/setup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "lunaowner", password: "Luna-Secret-123" }),
+  });
+  assert.equal(setup.status, 200);
+  const cookie = setup.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(cookie?.startsWith("luna_session="));
+  assert.match(setup.headers.get("set-cookie") || "", /HttpOnly/);
+  const session = await setup.json();
+  assert.equal(session.username, "lunaowner");
+  assert.equal(session.authenticated, true);
+  assert.equal(JSON.stringify(session).includes("Luna-Secret-123"), false);
+  assert.equal(JSON.stringify(session).includes("native-jwt"), false);
+
+  const configured = await fetch(`${base}/api/config`).then((response) => response.json());
+  assert.deepEqual(configured, { managed: true, setupRequired: false });
+  const repeated = await fetch(`${base}/api/setup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "another", password: "Another-Secret-123" }),
+  });
+  assert.equal(repeated.status, 409);
+  const albums = await fetch(`${base}/api/library/albums`, { headers: { Cookie: cookie! } }).then((response) => response.json());
+  assert.equal(albums.albums[0].name, "Nocturno");
 });

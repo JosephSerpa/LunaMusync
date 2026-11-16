@@ -61,26 +61,25 @@ if [[ ! -f "$INSTALL_DIR/.env" ]]; then
     return 1
   }
   LUNA_PORT="$(find_free_port 3001)"
-  NAVIDROME_PORT="$(find_free_port 4533)"
   cat > "$INSTALL_DIR/.env" <<EOF
 LUNA_IMAGE=$IMAGE
 LUNA_REPOSITORY=$REPOSITORY
 LUNA_PORT=$LUNA_PORT
-NAVIDROME_PORT=$NAVIDROME_PORT
-NAVIDROME_PUBLIC_URL=http://localhost:$NAVIDROME_PORT
 COOKIE_SECURE=false
 EOF
 fi
+LUNA_PORT="$(sed -n 's/^LUNA_PORT=//p' "$INSTALL_DIR/.env" | head -n 1)"
+LUNA_PORT="${LUNA_PORT:-3001}"
 
 if [[ $NO_START -eq 0 ]]; then
   cd "$INSTALL_DIR"
   docker compose --env-file .env -f docker-compose.yml -f docker-compose.libraries.yml up -d
   for _ in $(seq 1 60); do
-    curl -fsS --max-time 3 http://localhost:3001/api/health >/dev/null 2>&1 && break
+    curl -fsS --max-time 3 "http://localhost:$LUNA_PORT/api/health" >/dev/null 2>&1 && break
     sleep 3
   done
-  echo "Luna: http://localhost:3001"
-  echo "Primera vez: crea el administrador en http://localhost:4533"
+  echo "Luna está funcionando en http://localhost:$LUNA_PORT"
+  echo "Abre Luna y crea tu usuario. Tus bibliotecas se indexarán automáticamente."
 else
   echo "Instalación preparada en $INSTALL_DIR"
 fi

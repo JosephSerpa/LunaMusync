@@ -6,20 +6,20 @@ Tu biblioteca musical, con la identidad visual de [LunaPlayer](https://github.co
 
 - **Luna Web:** álbumes, canciones, listas, búsqueda, carátulas, streaming por rangos, cola de reproducción, aleatorio, repetición, volumen y controles multimedia del sistema.
 - **Luna Core:** API TypeScript que conecta por OpenSubsonic y protege las credenciales con una sesión `HttpOnly`.
-- **Servidor gestionado:** Docker Compose incluye Navidrome y Luna, con almacenamiento persistente y bibliotecas montadas en modo de solo lectura.
+- **Servidor gestionado:** Docker Compose incluye Luna y un motor interno de indexación y streaming, almacenamiento persistente y bibliotecas montadas en modo de solo lectura.
 - **Actualizaciones:** releases de GitHub, imagen fijada por digest, comprobación SHA-256 de Compose, copia de seguridad y restauración si el despliegue falla.
 
-Puedes conectar Luna Web a un servidor Navidrome, Subsonic, Airsonic o Gonic existente, o usar el instalador con Navidrome incluido.
+Puedes conectar Luna Web a un servidor Navidrome, Subsonic, Airsonic o Gonic existente, o usar el instalador gestionado. La instalación gestionada utiliza Navidrome como componente interno: no necesitas abrir su interfaz ni configurar sus puertos.
 
 ## Instalar
 
 Consulta [INSTALACION.md](INSTALACION.md). En Windows, instala Docker Desktop, descomprime la release y abre `Instalar Luna.cmd`. El asistente permite seleccionar varias carpetas de música. En Linux o macOS, ejecuta `./install.sh`.
 
-La primera vez debes crear el administrador en `http://localhost:4533`; después inicia sesión con esa cuenta en `http://localhost:3001`. Los archivos musicales no se modifican.
+Al abrir Luna por primera vez, crea tu propio usuario administrador directamente en su pantalla de bienvenida. Luna inicia la sesión automáticamente e indexa las bibliotecas elegidas durante la instalación. Los archivos musicales no se modifican.
 
 ## Desarrollo
 
-Requiere Node 24 o superior.
+Requiere Node 22 o superior.
 
 ```bash
 npm ci

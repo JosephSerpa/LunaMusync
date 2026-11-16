@@ -20,6 +20,10 @@ export const api = {
     method: "POST",
     body: JSON.stringify({ serverUrl, username, password }),
   }),
+  setup: (username: string, password: string) => request<Session>("/api/setup", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  }),
   disconnect: () => request<{ authenticated: false }>("/api/session", { method: "DELETE" }),
   albums: async () => {
     const albums: Album[] = [];
