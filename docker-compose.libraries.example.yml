@@ -1,0 +1,5 @@
+services:
+  navidrome:
+    volumes:
+      - "/ruta/a/mi/primera/biblioteca:/music/Biblioteca_1:ro"
+      - "/ruta/a/mi/segunda/biblioteca:/music/Biblioteca_2:ro"

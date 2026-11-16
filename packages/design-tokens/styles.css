@@ -1,0 +1,26 @@
+:root {
+  color-scheme: dark;
+  --luna-bg: #000000;
+  --luna-surface: #0b0b0e;
+  --luna-glass: #ffffff22;
+  --luna-ink: #ffffff;
+  --luna-ink-soft: #ffffffb3;
+  --luna-inverse: #0a0a0f;
+  --luna-outline: #ffffff33;
+  --luna-danger: #ff7a85;
+  --luna-font-heading: "Sora", sans-serif;
+  --luna-font-body: "Outfit", sans-serif;
+  --luna-radius-sm: 12px;
+  --luna-radius-md: 20px;
+  --luna-radius-lg: 28px;
+  --luna-radius-pill: 999px;
+  --luna-space-xs: 4px;
+  --luna-space-sm: 8px;
+  --luna-space-md: 16px;
+  --luna-space-lg: 24px;
+  --luna-space-xl: 32px;
+  --luna-space-2xl: 48px;
+  --luna-motion-fast: 150ms;
+  --luna-motion-normal: 250ms;
+  --luna-motion-slow: 400ms;
+}

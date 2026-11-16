@@ -1,0 +1,7 @@
+services:
+  luna:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: luna-musync:local
+    pull_policy: never

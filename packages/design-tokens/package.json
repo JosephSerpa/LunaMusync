@@ -1,0 +1,9 @@
+{
+  "name": "@luna/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./tokens.json",
+    "./styles.css": "./styles.css"
+  }
+}

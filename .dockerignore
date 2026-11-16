@@ -1,0 +1,14 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/*.log
+.env
+.env.*
+coverage
+.luna-test
+Dockerfile
+docker-compose*.yml
+scripts
