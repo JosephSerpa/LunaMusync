@@ -10,3 +10,9 @@ coverage/
 .idea/
 .vscode/
 .luna-test/
+.gradle/
+build/
+.kotlin/
+local.properties
+*.apk
+*.aab

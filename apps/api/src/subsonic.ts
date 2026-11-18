@@ -202,6 +202,20 @@ export class SubsonicClient {
     return playlist;
   }
 
+  async isAdmin(): Promise<boolean> {
+    const root = await this.request("getUser", { username: this.config.username });
+    return root.user?.adminRole === true;
+  }
+
+  async startScan(): Promise<void> {
+    await this.request("startScan");
+  }
+
+  async scanStatus(): Promise<{ scanning: boolean; count?: number }> {
+    const root = await this.request("getScanStatus");
+    return { scanning: Boolean(root.scanStatus?.scanning), count: root.scanStatus?.count ? Number(root.scanStatus.count) : undefined };
+  }
+
   async stream(id: string, range?: string): Promise<Response> {
     return this.media(this.url("stream", { id }), range);
   }

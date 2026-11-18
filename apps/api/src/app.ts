@@ -7,6 +7,8 @@ import { Readable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
 import { demoAlbums, demoAudio, demoCover, demoPlaylists, demoSongs } from "./demo.js";
 import { SubsonicClient, SubsonicError, type ServerInfo } from "./subsonic.js";
+import { ApiError } from "./errors.js";
+import { routeAdmin } from "./admin.js";
 
 interface Session {
   client: SubsonicClient;
@@ -20,12 +22,6 @@ const sessions = new Map<string, Session>();
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
 const COOKIE_NAME = "luna_session";
 const webDist = path.resolve(process.env.WEB_DIST || path.join(process.cwd(), "../web/dist"));
-
-class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
-    super(message);
-  }
-}
 
 export function createApp() {
   return createServer(async (request, response) => {
@@ -124,6 +120,11 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
 
   if (pathname.startsWith("/api/")) {
     const session = requireSession(request);
+
+    if (pathname.startsWith("/api/admin/")) {
+      await routeAdmin(pathname, method, url, request, response, session.client);
+      return;
+    }
 
     if (pathname === "/api/library/albums" && method === "GET") {
       const size = boundedNumber(url.searchParams.get("size"), 40, 1, 100);

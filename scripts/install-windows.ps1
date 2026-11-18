@@ -97,6 +97,13 @@ foreach ($path in $unique) {
   Write-Host "  Biblioteca ${index}: $path"
   $index++
 }
+$volumeLines += @("  luna:", "    volumes:")
+$index = 1
+foreach ($path in $unique) {
+  $dockerPath = $path.Replace("\", "/").Replace('"', '\"')
+  $volumeLines += "      - `"$dockerPath`:/music/Biblioteca_$index`:rw`""
+  $index++
+}
 Write-Utf8 (Join-Path $InstallDir "docker-compose.libraries.yml") $volumeLines
 
 $envPath = Join-Path $InstallDir ".env"

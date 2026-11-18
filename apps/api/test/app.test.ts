@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer, type Server } from "node:http";
+import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { createApp } from "../src/app.js";
+import { demoAudio } from "../src/demo.js";
 
 async function listen(server: Server): Promise<string> {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -65,6 +69,7 @@ function fakeSubsonic(options: { firstTime?: boolean } = {}): Server {
       return;
     }
     if (method === "ping") send(ok({}));
+    else if (method === "getUser") send(ok({ user: { username, adminRole: true } }));
     else if (method === "getAlbumList2") send(ok({ albumList2: { album: [album] } }));
     else if (method === "getAlbum") send(ok({ album: { ...album, song: [song] } }));
     else if (method === "search3") send(ok({ searchResult3: { album: url.searchParams.get("query") ? [album] : [], song: [song] } }));
@@ -160,6 +165,7 @@ test("OpenSubsonic session protects catalog and proxies authenticated media", as
   const cover = await fetch(`${base}/api/cover/cover-1?size=300`, { headers });
   assert.equal(cover.headers.get("content-type"), "image/jpeg");
   assert.equal((await cover.arrayBuffer()).byteLength, 4);
+  assert.equal((await fetch(`${base}/api/admin/tracks`, { headers })).status, 404);
 
   await fetch(`${base}/api/session`, { method: "DELETE", headers });
   const loggedOut = await fetch(`${base}/api/session`, { headers }).then((response) => response.json());
@@ -215,4 +221,58 @@ test("managed setup creates only the first administrator and opens a Luna sessio
   assert.equal(repeated.status, 409);
   const albums = await fetch(`${base}/api/library/albums`, { headers: { Cookie: cookie! } }).then((response) => response.json());
   assert.equal(albums.albums[0].name, "Nocturno");
+});
+
+
+test("managed administration edits only authenticated library copies and triggers indexing", async (context) => {
+  const root = await mkdtemp(path.join(tmpdir(), "luna-admin-api-test-"));
+  const music = path.join(root, "music");
+  await mkdir(path.join(music, "Biblioteca"), { recursive: true });
+  await writeFile(path.join(music, "Biblioteca", "Prueba.wav"), demoAudio("demo-1"));
+  const upstream = fakeSubsonic();
+  const upstreamUrl = await listen(upstream);
+  const previous = { url: process.env.NAVIDROME_URL, music: process.env.LUNA_MUSIC_ROOT, data: process.env.LUNA_DATA };
+  process.env.NAVIDROME_URL = upstreamUrl;
+  process.env.LUNA_MUSIC_ROOT = music;
+  process.env.LUNA_DATA = path.join(root, "data");
+  const app = createApp();
+  const base = await listen(app);
+  context.after(async () => {
+    app.close();
+    upstream.close();
+    await rm(root, { recursive: true, force: true });
+    for (const [key, value] of [["NAVIDROME_URL", previous.url], ["LUNA_MUSIC_ROOT", previous.music], ["LUNA_DATA", previous.data]] as const) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  assert.equal((await fetch(`${base}/api/admin/tracks`)).status, 401);
+  const login = await fetch(`${base}/api/session`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "listener", password: "secret" }),
+  });
+  const headers = { Cookie: login.headers.get("set-cookie")!.split(";")[0]!, "Content-Type": "application/json" };
+  const listing = await fetch(`${base}/api/admin/tracks`, { headers }).then((response) => response.json());
+  assert.equal(listing.tracks.length, 1);
+  const id = listing.tracks[0].id;
+  const update = await fetch(`${base}/api/admin/tracks/update`, {
+    method: "POST", headers, body: JSON.stringify({ ids: [id], changes: { title: "Editada", album: "Luna" } }),
+  });
+  assert.equal(update.status, 200);
+  assert.equal((await update.json()).changed, 1);
+  const lyrics = await fetch(`${base}/api/admin/lyrics/apply`, {
+    method: "POST", headers, body: JSON.stringify({ ids: [id], lyrics: "[00:01.00] Luna" }),
+  });
+  assert.equal(lyrics.status, 200);
+  const preview = await fetch(`${base}/api/admin/organize/preview`, {
+    method: "POST", headers, body: JSON.stringify({ ids: [id], options: { folders: true, metadata: true, renumber: true } }),
+  }).then((response) => response.json());
+  assert.equal(preview.changes.length, 1);
+  const backups = await fetch(`${base}/api/admin/backups`, { headers }).then((response) => response.json());
+  assert.equal(backups.backups.length, 2);
+  const sync = await fetch(`${base}/api/admin/sync`, { method: "POST", headers });
+  assert.equal(sync.status, 200);
+  const restore = await fetch(`${base}/api/admin/backups/${backups.backups[1].id}/restore`, { method: "POST", headers });
+  assert.equal(restore.status, 200);
 });

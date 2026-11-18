@@ -49,6 +49,15 @@ chmod +x "$INSTALL_DIR/luna.sh"
     echo "      - \"$path:/music/Biblioteca_$index:ro\""
     index=$((index + 1))
   done
+  echo "  luna:"
+  echo "    volumes:"
+  index=1
+  for library in "${LIBRARIES[@]}"; do
+    path="${library//\\//}"
+    path="${path//\"/\\\"}"
+    echo "      - \"$path:/music/Biblioteca_$index:rw\""
+    index=$((index + 1))
+  done
 } > "$INSTALL_DIR/docker-compose.libraries.yml"
 if [[ ! -f "$INSTALL_DIR/.env" ]]; then
   find_free_port() {

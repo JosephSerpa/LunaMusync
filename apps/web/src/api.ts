@@ -1,4 +1,4 @@
-import type { Album, AppConfig, Playlist, Session, Song } from "./types";
+import type { Album, AppConfig, Backup, LyricsResult, OnlineCover, OrganizationOptions, OrganizationPlan, Playlist, Session, Song, TagChanges, AdminTrack } from "./types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -52,6 +52,22 @@ export const api = {
   demo: async () => {
     const payload = await request<{ albums: Album[]; songs: Song[]; playlists: Playlist[] }>("/api/demo/library");
     return payload;
+  },
+  admin: {
+    tracks: (refresh = false) => request<{ tracks: AdminTrack[] }>(`/api/admin/tracks${refresh ? "?refresh=1" : ""}`),
+    update: (ids: string[], changes: TagChanges) => request<{ operationId: string; changed: number }>("/api/admin/tracks/update", { method: "POST", body: JSON.stringify({ ids, changes }) }),
+    localCovers: (trackId: string, scope: "folder" | "library") => request<{ covers: Array<{ id: string; path: string }> }>("/api/admin/covers/local", { method: "POST", body: JSON.stringify({ trackId, scope }) }),
+    searchCovers: (artist: string, album: string) => request<{ covers: OnlineCover[] }>("/api/admin/covers/search", { method: "POST", body: JSON.stringify({ artist, album }) }),
+    applyCover: (ids: string[], source: "local" | "online", coverId: string) => request<{ operationId: string; changed: number }>("/api/admin/covers/apply", { method: "POST", body: JSON.stringify({ ids, source, coverId }) }),
+    uploadCover: (ids: string[], data: string) => request<{ operationId: string; changed: number }>("/api/admin/covers/apply", { method: "POST", body: JSON.stringify({ ids, source: "upload", data }) }),
+    searchLyrics: (track: AdminTrack) => request<{ lyrics: LyricsResult[] }>("/api/admin/lyrics/search", { method: "POST", body: JSON.stringify({ title: track.title, artist: track.artist, album: track.album, duration: track.duration }) }),
+    applyLyrics: (ids: string[], lyrics: string) => request<{ operationId: string; changed: number }>("/api/admin/lyrics/apply", { method: "POST", body: JSON.stringify({ ids, lyrics }) }),
+    organizePreview: (ids: string[], options: OrganizationOptions) => request<OrganizationPlan>("/api/admin/organize/preview", { method: "POST", body: JSON.stringify({ ids, options }) }),
+    organizeApply: (ids: string[], options: OrganizationOptions) => request<{ operationId: string; changed: number }>("/api/admin/organize/apply", { method: "POST", body: JSON.stringify({ ids, options }) }),
+    backups: () => request<{ backups: Backup[] }>("/api/admin/backups"),
+    restore: (id: string) => request<{ restored: number }>(`/api/admin/backups/${encodeURIComponent(id)}/restore`, { method: "POST" }),
+    sync: () => request<{ scanning: boolean; count?: number }>("/api/admin/sync"),
+    startSync: () => request<{ scanning: boolean }>("/api/admin/sync", { method: "POST" }),
   },
 };
 

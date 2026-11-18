@@ -2,6 +2,7 @@ import { ArrowLeft, ListMusic, LoaderCircle, LogOut, Play, Search, X } from "luc
 import { useCallback, useEffect, useState } from "react";
 import { api, coverUrl, formatDuration } from "./api";
 import { AlbumCard } from "./components/AlbumCard";
+import { AdminPanel } from "./components/AdminPanel";
 import { FullPlayer } from "./components/FullPlayer";
 import { MoonIcon } from "./components/MoonIcon";
 import { PlayerBar } from "./components/PlayerBar";
@@ -154,13 +155,15 @@ function LibraryContent({ session, onLogout }: { session: Session; onLogout: () 
       <div className="library-frame">
         <header className="library-topbar">
           <div className="mobile-brand brand"><MoonIcon size={27} /><span>luna</span></div>
-          <label className="search-box"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca canciones, álbumes o artistas" aria-label="Buscar en la biblioteca" />{searching ? <LoaderCircle className="spin" size={17} /> : query && <button onClick={() => setQuery("")} aria-label="Limpiar búsqueda"><X size={17} /></button>}</label>
+          {view === "editor" ? <div className="admin-topbar-title">Administración y edición</div> : <label className="search-box"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca canciones, álbumes o artistas" aria-label="Buscar en la biblioteca" />{searching ? <LoaderCircle className="spin" size={17} /> : query && <button onClick={() => setQuery("")} aria-label="Limpiar búsqueda"><X size={17} /></button>}</label>}
           <div className="topbar-user"><span className="status-dot" /><div><strong>{session.username}</strong><small>{session.demo ? "Modo demostración" : session.managed ? "Luna Musync" : session.server.name}</small></div></div>
           <button className="icon-button mobile-logout" onClick={onLogout} aria-label="Cerrar sesión"><LogOut size={19} /></button>
         </header>
         <main className="library-content">
           {error && <div className="error-banner" role="alert"><span>{error}</span><button onClick={() => setError("")}><X size={16} /></button></div>}
-          {loading || detailLoading ? <LoadingLibrary /> : showingSearch ? (
+          {loading || detailLoading ? <LoadingLibrary /> : view === "editor" ? (
+            <AdminPanel onLibraryChanged={load} />
+          ) : showingSearch ? (
             <SearchResults query={query} results={searchResults} openAlbum={openAlbum} playAlbum={playAlbum} />
           ) : selected ? (
             <DetailView item={selected} kind={selectedKind} onBack={() => setSelected(null)} />

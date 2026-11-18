@@ -1,4 +1,4 @@
-import { Disc3, Home, Library, ListMusic, LogOut, Music2 } from "lucide-react";
+import { Disc3, Home, Library, ListMusic, LogOut, Music2, WandSparkles } from "lucide-react";
 import type { LibraryView, Session } from "../types";
 import { MoonIcon } from "./MoonIcon";
 
@@ -17,13 +17,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ view, onView, session, onLogout }: SidebarProps) {
+  const navigation = session.managed && !session.demo ? [...items, { id: "editor" as const, label: "Editor", icon: WandSparkles }] : items;
   return (
     <>
       <aside className="sidebar">
         <div className="brand"><MoonIcon size={31} /><span>luna</span></div>
         <nav className="main-nav" aria-label="Biblioteca">
           <p className="nav-caption">TU BIBLIOTECA</p>
-          {items.map((item) => (
+          {navigation.map((item) => (
             <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => onView(item.id)}>
               <item.icon size={20} strokeWidth={1.8} /><span>{item.label}</span>
             </button>
@@ -39,7 +40,7 @@ export function Sidebar({ view, onView, session, onLogout }: SidebarProps) {
         </div>
       </aside>
       <nav className="mobile-nav" aria-label="Biblioteca">
-        {items.map((item) => (
+        {navigation.map((item) => (
           <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => onView(item.id)}>
             <item.icon size={21} /><span>{item.label}</span>
           </button>
